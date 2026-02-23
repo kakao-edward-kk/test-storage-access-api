@@ -12,7 +12,7 @@
 }
 
 .diagnostics {
-  max-width: 500px;
+  max-width: 600px;
   width: 100%;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -66,7 +66,7 @@
 .iframe-controls {
   display: flex;
   gap: 0.5rem;
-  max-width: 500px;
+  max-width: 600px;
   width: 100%;
   margin-bottom: 1rem;
 }
@@ -104,7 +104,7 @@
 }
 
 .xfo-notice {
-  max-width: 500px;
+  max-width: 600px;
   font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.4);
   text-align: center;
@@ -165,6 +165,104 @@
   min-width: 0;
 }
 
+.url-list {
+  max-width: 600px;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.url-list-section {
+  margin-bottom: 0.8rem;
+}
+
+.url-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.url-list-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 0.3rem;
+}
+
+.url-list-clear {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.url-list-clear:hover {
+  color: #f87171;
+}
+
+.url-list-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.4rem 0.8rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: inherit;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  margin-bottom: 0.3rem;
+}
+
+.url-list-item:hover {
+  border-color: #646cff;
+  background: rgba(100, 108, 255, 0.08);
+}
+
+.url-list-item-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.url-list-item-delete {
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+  font-size: 1.2rem;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  padding: 0 0.2rem;
+}
+
+.url-list-item-delete:hover {
+  color: #f87171;
+}
+
+@media (max-width: 480px) {
+  .iframe-controls {
+    flex-direction: column;
+  }
+
+  .url-input {
+    font-size: 16px;
+  }
+
+  .btn {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
 @media (prefers-color-scheme: light) {
   .diagnostics {
     background: rgba(0, 0, 0, 0.04);
@@ -198,5 +296,26 @@
 
   .xfo-notice code {
     background: rgba(0, 0, 0, 0.06);
+  }
+
+  .url-list-label {
+    color: rgba(0, 0, 0, 0.4);
+  }
+
+  .url-list-clear {
+    color: rgba(0, 0, 0, 0.4);
+  }
+
+  .url-list-item {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  .url-list-item:hover {
+    background: rgba(100, 108, 255, 0.06);
+  }
+
+  .url-list-item-delete {
+    color: rgba(0, 0, 0, 0.3);
   }
 }

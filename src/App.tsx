@@ -2,8 +2,30 @@ import { useState } from 'react'
 import { useStorageAccessInfo } from './hooks/useStorageAccessInfo'
 import './App.css'
 
-// https://mystore.kakao.com
-const DEFAULT_URL = 'https://business.kakao.com/dashboard'
+const PRESET_URLS = [
+  'https://mystore.kakao.com/',
+  'https://business.kakao.com/dashboard',
+  'https://accounts.kakao.com/login/?continue=https%3A%2F%2Fbusiness.kakao.com%2Fm%2Fmystore',
+]
+
+const HISTORY_KEY = 'saa-test:url-history'
+const MAX_HISTORY = 10
+
+function loadHistory(): string[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function saveToHistory(url: string): string[] {
+  const history = loadHistory().filter((u) => u !== url)
+  const next = [url, ...history].slice(0, MAX_HISTORY)
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(next))
+  return next
+}
 
 function StatusBadge({ supported }: { supported: boolean }) {
   return (
@@ -15,8 +37,31 @@ function StatusBadge({ supported }: { supported: boolean }) {
 
 function App() {
   const [showIframe, setShowIframe] = useState(false)
-  const [iframeUrl, setIframeUrl] = useState(DEFAULT_URL)
+  const [iframeUrl, setIframeUrl] = useState(PRESET_URLS[1])
+  const [urlHistory, setUrlHistory] = useState(loadHistory)
   const info = useStorageAccessInfo()
+
+  const handleOpenIframe = () => {
+    if (iframeUrl.trim()) {
+      setUrlHistory(saveToHistory(iframeUrl.trim()))
+      setShowIframe(true)
+    }
+  }
+
+  const handleSelectUrl = (url: string) => {
+    setIframeUrl(url)
+  }
+
+  const handleDeleteHistory = (url: string) => {
+    const next = urlHistory.filter((u) => u !== url)
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(next))
+    setUrlHistory(next)
+  }
+
+  const handleClearHistory = () => {
+    localStorage.removeItem(HISTORY_KEY)
+    setUrlHistory([])
+  }
 
   return (
     <div className="app">
@@ -59,7 +104,7 @@ function App() {
           onChange={(e) => setIframeUrl(e.target.value)}
           placeholder="https://example.com"
         />
-        <button className="btn" onClick={() => setShowIframe(true)}>
+        <button className="btn" onClick={handleOpenIframe}>
           iframe 띄우기
         </button>
       </div>
@@ -68,6 +113,51 @@ function App() {
         대상 서버가 <code>X-Frame-Options: SAMEORIGIN</code> 또는{' '}
         <code>frame-ancestors</code> CSP를 설정한 경우 iframe 로드가 차단됩니다.
       </p>
+
+      <div className="url-list">
+        <div className="url-list-section">
+          <span className="url-list-label">Presets</span>
+          {PRESET_URLS.map((url) => (
+            <button
+              key={url}
+              className="url-list-item"
+              onClick={() => handleSelectUrl(url)}
+            >
+              <span className="url-list-item-text">{url}</span>
+            </button>
+          ))}
+        </div>
+
+        {urlHistory.length > 0 && (
+          <div className="url-list-section">
+            <div className="url-list-header">
+              <span className="url-list-label">History</span>
+              <button className="url-list-clear" onClick={handleClearHistory}>
+                clear history
+              </button>
+            </div>
+            {urlHistory.map((url) => (
+              <button
+                key={url}
+                className="url-list-item"
+                onClick={() => handleSelectUrl(url)}
+              >
+                <span className="url-list-item-text">{url}</span>
+                <span
+                  className="url-list-item-delete"
+                  role="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDeleteHistory(url)
+                  }}
+                >
+                  &times;
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {showIframe && (
         <div className="overlay">
