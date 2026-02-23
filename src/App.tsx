@@ -47,6 +47,10 @@ function App() {
         </div>
       </div>
 
+      <button className="btn" onClick={() => document.requestStorageAccess()} style={{marginBottom: '2rem'}}>
+        requestStorageAccess
+      </button>
+
       <div className="iframe-controls">
         <input
           className="url-input"
@@ -55,7 +59,7 @@ function App() {
           onChange={(e) => setIframeUrl(e.target.value)}
           placeholder="https://example.com"
         />
-        <button className="open-iframe-btn" onClick={() => setShowIframe(true)}>
+        <button className="btn" onClick={() => setShowIframe(true)}>
           iframe 띄우기
         </button>
       </div>
