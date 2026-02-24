@@ -8,14 +8,14 @@ const PRESET_URLS = [
   'https://test-storage-access-api.vercel.app/landing',
 ]
 
-function getDefaultChildOrigin(): string {
+function getDefaultChildUrl(): string {
   if (typeof window === 'undefined') return ''
   const { hostname } = window.location
   if (hostname.includes('vercel.app')) {
-    return window.location.origin.replace('vercel.app', 'netlify.app')
+    return window.location.origin.replace('vercel.app', 'netlify.app') + '/landing'
   }
   if (hostname.includes('netlify.app')) {
-    return window.location.origin.replace('netlify.app', 'vercel.app')
+    return window.location.origin.replace('netlify.app', 'vercel.app') + '/landing'
   }
   return ''
 }
@@ -30,7 +30,7 @@ function ParentPage() {
     return new URLSearchParams(window.location.search).get('token')
   })
 
-  const [childOrigin, setChildOrigin] = useState(getDefaultChildOrigin)
+  const [childUrl, setChildUrl] = useState(getDefaultChildUrl)
   const [showIframe, setShowIframe] = useState(!!initUrlToken)
   const [token, setToken] = useState<string | null>(() => {
     if (initUrlToken) return initUrlToken
@@ -50,8 +50,8 @@ function ParentPage() {
   // Listen for postMessage from iframe
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
-      if (!childOrigin) return
-      if (e.origin !== childOrigin) return
+      if (!childUrl) return
+      if (e.origin !== new URL(childUrl).origin) return
       if (e.data?.type === 'SESSION_TOKEN' && e.data.token) {
         localStorage.setItem(TOKEN_KEY, e.data.token)
         setToken(e.data.token)
@@ -59,10 +59,10 @@ function ParentPage() {
     }
     window.addEventListener('message', handleMessage)
     return () => window.removeEventListener('message', handleMessage)
-  }, [childOrigin])
+  }, [childUrl])
 
   const handleOpenIframe = () => {
-    if (childOrigin.trim()) {
+    if (childUrl.trim()) {
       setShowIframe(true)
     }
   }
@@ -72,9 +72,7 @@ function ParentPage() {
     setToken(null)
   }
 
-  const iframeSrc = childOrigin
-    ? `${childOrigin}/landing?token=${token ?? ''}&parent_origin=${encodeURIComponent(window.location.origin)}`
-    : ''
+  const iframeSrc = childUrl
 
   return (
     <div className="app">
@@ -101,9 +99,9 @@ function ParentPage() {
         <input
           className="url-input"
           type="url"
-          value={childOrigin}
-          onChange={(e) => setChildOrigin(e.target.value)}
-          placeholder="https://child-domain.netlify.app"
+          value={childUrl}
+          onChange={(e) => setChildUrl(e.target.value)}
+          placeholder="https://child-domain.netlify.app/landing"
         />
         <button className="btn" onClick={handleOpenIframe}>
           iframe 열기
@@ -117,7 +115,7 @@ function ParentPage() {
             <button
               key={url}
               className="url-list-item"
-              onClick={() => setChildOrigin(url)}
+              onClick={() => setChildUrl(url)}
             >
               <span className="url-list-item-text">{url}</span>
             </button>
@@ -131,7 +129,7 @@ function ParentPage() {
         </p>
       )}
 
-      {showIframe && childOrigin && (
+      {showIframe && childUrl && (
         <div className="overlay">
           <div className="overlay-header">
             <span className="overlay-url">{iframeSrc}</span>
