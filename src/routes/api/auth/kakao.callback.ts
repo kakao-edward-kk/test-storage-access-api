@@ -36,7 +36,7 @@ export const Route = createFileRoute('/api/auth/kakao/callback')({
           })
         }
 
-        const parentOrigin = cookies['oauth_parent_origin']
+        const isPopup = cookies['oauth_mode'] === 'popup'
 
         try {
           const accessToken = await exchangeCode(code)
@@ -56,15 +56,31 @@ export const Route = createFileRoute('/api/auth/kakao/callback')({
             ['Set-Cookie', 'oauth_state=; Max-Age=0; Path=/'],
           ]
 
-          if (parentOrigin) {
+          if (isPopup) {
             clearCookies.push([
               'Set-Cookie',
-              'oauth_parent_origin=; Max-Age=0; Path=/',
+              'oauth_mode=; Max-Age=0; Path=/',
             ])
-            return new Response(null, {
-              status: 302,
+
+            // Validate UUID format before inserting into HTML
+            const uuidRegex =
+              /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+            if (!uuidRegex.test(sessionId)) {
+              return new Response(null, {
+                status: 302,
+                headers: { Location: '/login?error=invalid_session' },
+              })
+            }
+
+            const html = `<!DOCTYPE html><html><body><script>
+if(window.opener){window.opener.postMessage({type:"OAUTH_COMPLETE",token:"${sessionId}"},window.location.origin)}
+window.close();
+</script></body></html>`
+
+            return new Response(html, {
+              status: 200,
               headers: [
-                ['Location', `${parentOrigin}/parent?token=${sessionId}`],
+                ['Content-Type', 'text/html; charset=utf-8'],
                 ...clearCookies,
               ],
             })

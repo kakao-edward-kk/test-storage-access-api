@@ -53,74 +53,106 @@ function UserProfile({ user }: { user: SessionUser }) {
   )
 }
 
-function LandingPage() {
-  const { user } = Route.useRouteContext()
-
-  const [initParams] = useState(() => {
-    if (typeof window === 'undefined') return { token: null, origin: null }
-    const params = new URLSearchParams(window.location.search)
-    return {
-      token: params.get('token'),
-      origin: params.get('parent_origin'),
-    }
-  })
-
-  const iframeMode = !!initParams.origin
+function IframeMode({ parentOrigin }: { parentOrigin: string }) {
   const [iframeUser, setIframeUser] = useState<SessionUser | null>(null)
-  const [verifying, setVerifying] = useState(
-    () => !!initParams.token && !!initParams.origin,
+  const [status, setStatus] = useState<'waiting' | 'verifying' | 'done' | 'expired'>(
+    'waiting',
   )
 
   useEffect(() => {
-    const { token, origin } = initParams
+    // Clean URL
+    window.history.replaceState({}, '', window.location.pathname)
 
-    if (token || origin) {
-      window.history.replaceState({}, '', window.location.pathname)
+    // Send READY to parent
+    window.parent.postMessage({ type: 'READY' }, parentOrigin)
+
+    function handleMessage(e: MessageEvent) {
+      if (e.origin !== parentOrigin) return
+
+      if (e.data?.type === 'TOKEN') {
+        const token = e.data.token as string
+        setStatus('verifying')
+
+        fetch(`/api/auth/session?token=${encodeURIComponent(token)}`)
+          .then((r) => r.json())
+          .then((data: { user: SessionUser | null }) => {
+            if (data.user) {
+              setIframeUser(data.user)
+              setStatus('done')
+              window.parent.postMessage(
+                { type: 'ACK', user: data.user },
+                parentOrigin,
+              )
+            } else {
+              setStatus('expired')
+              window.parent.postMessage({ type: 'TOKEN_EXPIRED' }, parentOrigin)
+            }
+          })
+          .catch(() => {
+            setStatus('expired')
+            window.parent.postMessage({ type: 'TOKEN_EXPIRED' }, parentOrigin)
+          })
+      }
     }
 
-    if (token && origin) {
-      fetch(`/api/auth/session?token=${encodeURIComponent(token)}`)
-        .then((r) => r.json())
-        .then((data: { user: SessionUser | null }) => {
-          if (data.user) {
-            setIframeUser(data.user)
-            window.parent.postMessage(
-              { type: 'SESSION_TOKEN', token },
-              origin,
-            )
-          }
-        })
-        .finally(() => setVerifying(false))
-    } else if (!token && origin) {
-      window.top!.location.href = `${window.location.origin}/api/auth/kakao?parent_origin=${encodeURIComponent(origin)}`
-    }
-  }, [initParams])
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [parentOrigin])
 
-  // Iframe mode: show verification result or loading
-  if (iframeMode) {
-    if (verifying) {
-      return (
-        <div className="app">
-          <h1>세션 확인 중...</h1>
-        </div>
-      )
-    }
-
-    if (iframeUser) {
-      return (
-        <div className="app">
-          <h1>로그인 완료</h1>
-          <UserProfile user={iframeUser} />
-        </div>
-      )
-    }
-
-    // Redirecting to OAuth...
+  if (status === 'waiting') {
     return (
       <div className="app">
-        <h1>로그인으로 이동 중...</h1>
+        <h1>토큰 대기 중...</h1>
+        <p className="landing-subtitle">Parent에서 로그인해 주세요.</p>
       </div>
     )
+  }
+
+  if (status === 'verifying') {
+    return (
+      <div className="app">
+        <h1>세션 확인 중...</h1>
+      </div>
+    )
+  }
+
+  if (status === 'done' && iframeUser) {
+    return (
+      <div className="app">
+        <h1>로그인 완료</h1>
+        <UserProfile user={iframeUser} />
+      </div>
+    )
+  }
+
+  return (
+    <div className="app">
+      <h1>토큰 만료</h1>
+      <p className="landing-subtitle">Parent에서 다시 로그인해 주세요.</p>
+    </div>
+  )
+}
+
+const ALLOWED_PARENT_ORIGINS = new Set([
+  'https://test-storage-access-api.netlify.app',
+  'https://test-storage-access-api.vercel.app',
+])
+
+function LandingPage() {
+  const { user } = Route.useRouteContext()
+
+  const [parentOrigin] = useState(() => {
+    if (typeof window === 'undefined') return null
+    const raw = new URLSearchParams(window.location.search).get('parent_origin')
+    if (!raw) return null
+    // Allow same-origin (localhost dev) or known origins
+    if (raw === window.location.origin) return raw
+    if (ALLOWED_PARENT_ORIGINS.has(raw)) return raw
+    return null
+  })
+
+  if (parentOrigin) {
+    return <IframeMode parentOrigin={parentOrigin} />
   }
 
   // Normal (non-iframe) mode

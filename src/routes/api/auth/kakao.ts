@@ -6,7 +6,7 @@ export const Route = createFileRoute('/api/auth/kakao')({
     handlers: {
       GET: async ({ request }) => {
         const reqUrl = new URL(request.url)
-        const parentOrigin = reqUrl.searchParams.get('parent_origin')
+        const mode = reqUrl.searchParams.get('mode')
 
         const state = crypto.randomUUID()
         const url = getAuthUrl(state)
@@ -18,10 +18,10 @@ export const Route = createFileRoute('/api/auth/kakao')({
           ],
         ]
 
-        if (parentOrigin) {
+        if (mode === 'popup') {
           setCookies.push([
             'Set-Cookie',
-            `oauth_parent_origin=${parentOrigin}; HttpOnly; SameSite=Lax; Path=/; Max-Age=600`,
+            `oauth_mode=popup; HttpOnly; SameSite=Lax; Path=/; Max-Age=600`,
           ])
         }
 

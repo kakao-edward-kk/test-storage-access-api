@@ -1,7 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useRef, useState } from 'react'
-
-const TOKEN_KEY = 'parent:session-token'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 const PRESET_URLS = [
   'https://test-storage-access-api.netlify.app/landing',
@@ -20,59 +18,102 @@ function getDefaultChildUrl(): string {
   return ''
 }
 
+interface SessionUser {
+  id: string
+  kakaoId: string
+  nickname: string | null
+  profileImage: string | null
+}
+
 export const Route = createFileRoute('/parent')({
   component: ParentPage,
 })
 
 function ParentPage() {
-  const [initUrlToken] = useState(() => {
-    if (typeof window === 'undefined') return null
-    return new URLSearchParams(window.location.search).get('token')
-  })
-
   const [childUrl, setChildUrl] = useState(getDefaultChildUrl)
-  const [showIframe, setShowIframe] = useState(!!initUrlToken)
-  const [token, setToken] = useState<string | null>(() => {
-    if (initUrlToken) return initUrlToken
-    if (typeof window === 'undefined') return null
-    return localStorage.getItem(TOKEN_KEY)
-  })
-  const [autoOpened] = useState(!!initUrlToken)
+  const [showIframe, setShowIframe] = useState(false)
+  const [token, setToken] = useState<string | null>(null)
+  const [user, setUser] = useState<SessionUser | null>(null)
   const iframeRef = useRef<HTMLIFrameElement>(null)
+  const iframeReadyRef = useRef(false)
+  const tokenRef = useRef<string | null>(null)
 
-  useEffect(() => {
-    if (initUrlToken) {
-      localStorage.setItem(TOKEN_KEY, initUrlToken)
-      window.history.replaceState({}, '', window.location.pathname)
-    }
-  }, [initUrlToken])
+  const sendTokenToIframe = useCallback(
+    (t: string) => {
+      const iframe = iframeRef.current
+      if (!iframe?.contentWindow || !childUrl) return
+      const childOrigin = new URL(childUrl).origin
+      iframe.contentWindow.postMessage({ type: 'TOKEN', token: t }, childOrigin)
+    },
+    [childUrl],
+  )
 
-  // Listen for postMessage from iframe
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
+      const { data } = e
+
+      // OAUTH_COMPLETE from popup (same origin)
+      if (data?.type === 'OAUTH_COMPLETE' && e.origin === window.location.origin) {
+        const t = data.token as string
+        tokenRef.current = t
+        setToken(t)
+        if (iframeReadyRef.current) {
+          sendTokenToIframe(t)
+        }
+        return
+      }
+
+      // Messages from iframe (child origin)
       if (!childUrl) return
-      if (e.origin !== new URL(childUrl).origin) return
-      if (e.data?.type === 'SESSION_TOKEN' && e.data.token) {
-        localStorage.setItem(TOKEN_KEY, e.data.token)
-        setToken(e.data.token)
+      const childOrigin = new URL(childUrl).origin
+      if (e.origin !== childOrigin) return
+
+      if (data?.type === 'READY') {
+        iframeReadyRef.current = true
+        if (tokenRef.current) {
+          sendTokenToIframe(tokenRef.current)
+        }
+      } else if (data?.type === 'ACK') {
+        setUser(data.user as SessionUser)
+      } else if (data?.type === 'TOKEN_EXPIRED') {
+        tokenRef.current = null
+        setToken(null)
+        setUser(null)
       }
     }
+
     window.addEventListener('message', handleMessage)
     return () => window.removeEventListener('message', handleMessage)
-  }, [childUrl])
+  }, [childUrl, sendTokenToIframe])
+
+  const handleLogin = () => {
+    const popup = window.open(
+      '/api/auth/kakao?mode=popup',
+      'kakao-oauth',
+      'width=480,height=700',
+    )
+    if (!popup) {
+      alert('팝업이 차단되었습니다. 팝업 차단을 해제해 주세요.')
+    }
+  }
 
   const handleOpenIframe = () => {
     if (childUrl.trim()) {
+      iframeReadyRef.current = false
+      setUser(null)
       setShowIframe(true)
     }
   }
 
   const handleClearToken = () => {
-    localStorage.removeItem(TOKEN_KEY)
+    tokenRef.current = null
     setToken(null)
+    setUser(null)
   }
 
   const iframeSrc = childUrl
+    ? `${childUrl}${childUrl.includes('?') ? '&' : '?'}parent_origin=${encodeURIComponent(window.location.origin)}`
+    : ''
 
   return (
     <div className="app">
@@ -87,13 +128,39 @@ function ParentPage() {
           <code className="parent-token-value">
             {token ? `${token.slice(0, 8)}...` : 'none'}
           </code>
-          {token && (
+          {token ? (
             <button className="url-list-clear" onClick={handleClearToken}>
               clear
+            </button>
+          ) : (
+            <button className="btn" onClick={handleLogin}>
+              카카오 로그인
             </button>
           )}
         </div>
       </div>
+
+      {user && (
+        <div className="diagnostics">
+          {user.profileImage && (
+            <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+              <img
+                src={user.profileImage}
+                alt="프로필"
+                style={{ width: 80, height: 80, borderRadius: '50%' }}
+              />
+            </div>
+          )}
+          <div className="diagnostics-row">
+            <span>닉네임</span>
+            <span className="status-value">{user.nickname ?? '-'}</span>
+          </div>
+          <div className="diagnostics-row">
+            <span>Kakao ID</span>
+            <span className="status-value">{user.kakaoId}</span>
+          </div>
+        </div>
+      )}
 
       <div className="iframe-controls">
         <input
@@ -122,12 +189,6 @@ function ParentPage() {
           ))}
         </div>
       </div>
-
-      {autoOpened && (
-        <p className="xfo-notice">
-          OAuth 완료 후 자동으로 iframe을 다시 열었습니다.
-        </p>
-      )}
 
       {showIframe && childUrl && (
         <div className="overlay">
