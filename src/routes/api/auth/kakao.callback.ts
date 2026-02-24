@@ -36,6 +36,8 @@ export const Route = createFileRoute('/api/auth/kakao/callback')({
           })
         }
 
+        const parentOrigin = cookies['oauth_parent_origin']
+
         try {
           const accessToken = await exchangeCode(code)
           const kakaoUser = await getUserInfo(accessToken)
@@ -49,13 +51,28 @@ export const Route = createFileRoute('/api/auth/kakao/callback')({
           const sessionId = await createSession(userId)
           const cookie = sessionCookie(sessionId, 7 * 24 * 60 * 60)
 
+          const clearCookies: [string, string][] = [
+            ['Set-Cookie', cookie],
+            ['Set-Cookie', 'oauth_state=; Max-Age=0; Path=/'],
+          ]
+
+          if (parentOrigin) {
+            clearCookies.push([
+              'Set-Cookie',
+              'oauth_parent_origin=; Max-Age=0; Path=/',
+            ])
+            return new Response(null, {
+              status: 302,
+              headers: [
+                ['Location', `${parentOrigin}/parent?token=${sessionId}`],
+                ...clearCookies,
+              ],
+            })
+          }
+
           return new Response(null, {
             status: 302,
-            headers: [
-              ['Location', '/profile'],
-              ['Set-Cookie', cookie],
-              ['Set-Cookie', 'oauth_state=; Max-Age=0; Path=/'],
-            ],
+            headers: [['Location', '/landing'], ...clearCookies],
           })
         } catch {
           return new Response(null, {

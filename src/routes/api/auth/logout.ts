@@ -27,7 +27,7 @@ export const Route = createFileRoute('/api/auth/logout')({
         return new Response(null, {
           status: 302,
           headers: {
-            Location: '/',
+            Location: '/landing',
             'Set-Cookie': expiredCookie,
           },
         })

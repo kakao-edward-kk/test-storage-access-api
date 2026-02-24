@@ -9,17 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ParentRouteImport } from './routes/parent'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LandingRouteImport } from './routes/landing'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiAuthSessionRouteImport } from './routes/api/auth/session'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiAuthKakaoRouteImport } from './routes/api/auth/kakao'
 import { Route as ApiAuthKakaoCallbackRouteImport } from './routes/api/auth/kakao.callback'
 
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
+const ParentRoute = ParentRouteImport.update({
+  id: '/parent',
+  path: '/parent',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -35,6 +36,11 @@ const LandingRoute = LandingRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthSessionRoute = ApiAuthSessionRouteImport.update({
+  id: '/api/auth/session',
+  path: '/api/auth/session',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthLogoutRoute = ApiAuthLogoutRouteImport.update({
@@ -57,18 +63,20 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
-  '/profile': typeof ProfileRoute
+  '/parent': typeof ParentRoute
   '/api/auth/kakao': typeof ApiAuthKakaoRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/auth/kakao/callback': typeof ApiAuthKakaoCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
-  '/profile': typeof ProfileRoute
+  '/parent': typeof ParentRoute
   '/api/auth/kakao': typeof ApiAuthKakaoRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/auth/kakao/callback': typeof ApiAuthKakaoCallbackRoute
 }
 export interface FileRoutesById {
@@ -76,9 +84,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
-  '/profile': typeof ProfileRoute
+  '/parent': typeof ParentRoute
   '/api/auth/kakao': typeof ApiAuthKakaoRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/auth/kakao/callback': typeof ApiAuthKakaoCallbackRoute
 }
 export interface FileRouteTypes {
@@ -87,27 +96,30 @@ export interface FileRouteTypes {
     | '/'
     | '/landing'
     | '/login'
-    | '/profile'
+    | '/parent'
     | '/api/auth/kakao'
     | '/api/auth/logout'
+    | '/api/auth/session'
     | '/api/auth/kakao/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/landing'
     | '/login'
-    | '/profile'
+    | '/parent'
     | '/api/auth/kakao'
     | '/api/auth/logout'
+    | '/api/auth/session'
     | '/api/auth/kakao/callback'
   id:
     | '__root__'
     | '/'
     | '/landing'
     | '/login'
-    | '/profile'
+    | '/parent'
     | '/api/auth/kakao'
     | '/api/auth/logout'
+    | '/api/auth/session'
     | '/api/auth/kakao/callback'
   fileRoutesById: FileRoutesById
 }
@@ -115,18 +127,19 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LandingRoute: typeof LandingRoute
   LoginRoute: typeof LoginRoute
-  ProfileRoute: typeof ProfileRoute
+  ParentRoute: typeof ParentRoute
   ApiAuthKakaoRoute: typeof ApiAuthKakaoRouteWithChildren
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
+  ApiAuthSessionRoute: typeof ApiAuthSessionRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
+    '/parent': {
+      id: '/parent'
+      path: '/parent'
+      fullPath: '/parent'
+      preLoaderRoute: typeof ParentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -148,6 +161,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/session': {
+      id: '/api/auth/session'
+      path: '/api/auth/session'
+      fullPath: '/api/auth/session'
+      preLoaderRoute: typeof ApiAuthSessionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/logout': {
@@ -190,9 +210,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LandingRoute: LandingRoute,
   LoginRoute: LoginRoute,
-  ProfileRoute: ProfileRoute,
+  ParentRoute: ParentRoute,
   ApiAuthKakaoRoute: ApiAuthKakaoRouteWithChildren,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
+  ApiAuthSessionRoute: ApiAuthSessionRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

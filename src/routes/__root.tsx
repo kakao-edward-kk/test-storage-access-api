@@ -5,16 +5,10 @@ import {
   Scripts,
   createRootRoute,
 } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
 import type { ReactNode } from 'react'
 import { Nav } from '~/components/Nav'
-import { getSession } from '../../server/auth'
 import globalCss from '~/styles/global.css?url'
 import appCss from '~/styles/app.css?url'
-
-const fetchUser = createServerFn({ method: 'GET' }).handler(async () => {
-  return await getSession()
-})
 
 export const Route = createRootRoute({
   head: () => ({
@@ -27,10 +21,6 @@ export const Route = createRootRoute({
       { rel: 'stylesheet', href: appCss },
     ],
   }),
-  beforeLoad: async () => {
-    const user = await fetchUser()
-    return { user }
-  },
   component: RootComponent,
   shellComponent: RootDocument,
 })

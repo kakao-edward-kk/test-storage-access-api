@@ -295,6 +295,24 @@
   min-width: 0;
 }
 
+/* ── Parent ── */
+
+.parent-token-status {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.parent-token-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.parent-token-value {
+  font-size: 0.875rem;
+  color: #111;
+}
+
 /* ── Landing ── */
 
 .landing-subtitle {
