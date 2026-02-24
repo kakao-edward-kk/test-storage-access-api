@@ -50,10 +50,9 @@ function RootDocument({ children }: { children: ReactNode }) {
 }
 
 function RootComponent() {
-  const { user } = Route.useRouteContext()
   return (
     <>
-      <Nav user={user} />
+      <Nav />
       <Outlet />
     </>
   )

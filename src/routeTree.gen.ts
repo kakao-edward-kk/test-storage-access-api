@@ -9,19 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as StorageAccessRouteImport } from './routes/storage-access'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as LandingRouteImport } from './routes/landing'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiAuthKakaoRouteImport } from './routes/api/auth/kakao'
 import { Route as ApiAuthKakaoCallbackRouteImport } from './routes/api/auth/kakao.callback'
 
-const StorageAccessRoute = StorageAccessRouteImport.update({
-  id: '/storage-access',
-  path: '/storage-access',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -30,6 +25,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LandingRoute = LandingRouteImport.update({
+  id: '/landing',
+  path: '/landing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -55,18 +55,18 @@ const ApiAuthKakaoCallbackRoute = ApiAuthKakaoCallbackRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
-  '/storage-access': typeof StorageAccessRoute
   '/api/auth/kakao': typeof ApiAuthKakaoRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/kakao/callback': typeof ApiAuthKakaoCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
-  '/storage-access': typeof StorageAccessRoute
   '/api/auth/kakao': typeof ApiAuthKakaoRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/kakao/callback': typeof ApiAuthKakaoCallbackRoute
@@ -74,9 +74,9 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
-  '/storage-access': typeof StorageAccessRoute
   '/api/auth/kakao': typeof ApiAuthKakaoRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/kakao/callback': typeof ApiAuthKakaoCallbackRoute
@@ -85,27 +85,27 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/landing'
     | '/login'
     | '/profile'
-    | '/storage-access'
     | '/api/auth/kakao'
     | '/api/auth/logout'
     | '/api/auth/kakao/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/landing'
     | '/login'
     | '/profile'
-    | '/storage-access'
     | '/api/auth/kakao'
     | '/api/auth/logout'
     | '/api/auth/kakao/callback'
   id:
     | '__root__'
     | '/'
+    | '/landing'
     | '/login'
     | '/profile'
-    | '/storage-access'
     | '/api/auth/kakao'
     | '/api/auth/logout'
     | '/api/auth/kakao/callback'
@@ -113,22 +113,15 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LandingRoute: typeof LandingRoute
   LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
-  StorageAccessRoute: typeof StorageAccessRoute
   ApiAuthKakaoRoute: typeof ApiAuthKakaoRouteWithChildren
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/storage-access': {
-      id: '/storage-access'
-      path: '/storage-access'
-      fullPath: '/storage-access'
-      preLoaderRoute: typeof StorageAccessRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -141,6 +134,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/landing': {
+      id: '/landing'
+      path: '/landing'
+      fullPath: '/landing'
+      preLoaderRoute: typeof LandingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -188,9 +188,9 @@ const ApiAuthKakaoRouteWithChildren = ApiAuthKakaoRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LandingRoute: LandingRoute,
   LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
-  StorageAccessRoute: StorageAccessRoute,
   ApiAuthKakaoRoute: ApiAuthKakaoRouteWithChildren,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
 }
