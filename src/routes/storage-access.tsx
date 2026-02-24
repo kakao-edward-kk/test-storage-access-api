@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useStorageAccessInfo } from '~/hooks/useStorageAccessInfo'
 
 const PRESET_URLS = [
@@ -42,12 +42,8 @@ export const Route = createFileRoute('/storage-access')({
 function StorageAccessPage() {
   const [showIframe, setShowIframe] = useState(false)
   const [iframeUrl, setIframeUrl] = useState(PRESET_URLS[1])
-  const [urlHistory, setUrlHistory] = useState<string[]>([])
+  const [urlHistory, setUrlHistory] = useState<string[]>(loadHistory())
   const info = useStorageAccessInfo()
-
-  useEffect(() => {
-    setUrlHistory(loadHistory())
-  }, [])
 
   const handleOpenIframe = () => {
     if (iframeUrl.trim()) {
