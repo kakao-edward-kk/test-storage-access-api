@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { useStorageAccessInfo } from './hooks/useStorageAccessInfo'
-import './App.css'
+import { createFileRoute } from '@tanstack/react-router'
+import { useState, useEffect } from 'react'
+import { useStorageAccessInfo } from '~/hooks/useStorageAccessInfo'
 
 const PRESET_URLS = [
   'https://mystore.kakao.com/',
@@ -35,11 +35,19 @@ function StatusBadge({ supported }: { supported: boolean }) {
   )
 }
 
-function App() {
+export const Route = createFileRoute('/storage-access')({
+  component: StorageAccessPage,
+})
+
+function StorageAccessPage() {
   const [showIframe, setShowIframe] = useState(false)
   const [iframeUrl, setIframeUrl] = useState(PRESET_URLS[1])
-  const [urlHistory, setUrlHistory] = useState(loadHistory)
+  const [urlHistory, setUrlHistory] = useState<string[]>([])
   const info = useStorageAccessInfo()
+
+  useEffect(() => {
+    setUrlHistory(loadHistory())
+  }, [])
 
   const handleOpenIframe = () => {
     if (iframeUrl.trim()) {
@@ -83,7 +91,9 @@ function App() {
         <div className="diagnostics-row">
           <span>현재 hasStorageAccess() 결과</span>
           <span className="status-value">
-            {info.currentHasAccess === null ? 'N/A' : String(info.currentHasAccess)}
+            {info.currentHasAccess === null
+              ? 'N/A'
+              : String(info.currentHasAccess)}
           </span>
         </div>
         <div className="diagnostics-ua">
@@ -92,7 +102,11 @@ function App() {
         </div>
       </div>
 
-      <button className="btn" onClick={() => document.requestStorageAccess()} style={{marginBottom: '2rem'}}>
+      <button
+        className="btn"
+        onClick={() => document.requestStorageAccess()}
+        style={{ marginBottom: '2rem' }}
+      >
         requestStorageAccess
       </button>
 
@@ -177,5 +191,3 @@ function App() {
     </div>
   )
 }
-
-export default App

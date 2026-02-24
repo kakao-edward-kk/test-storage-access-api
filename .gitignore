@@ -10,7 +10,17 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+.output
+.vinxi
+.nitro
 *.local
+
+# DB
+local.db
+local.db-*
+
+# Env
+.env
 
 # Editor directories and files
 .vscode/*
